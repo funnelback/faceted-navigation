@@ -2,7 +2,7 @@
     Faceted Navigation tags
 	
 	Author: Peter Levan, Dec 2014
-	Version: 24 Dec 2014 
+	Version: 10 Jun 2015 
 	
 	Faceted navigation macros based on the faceted navigaton tag set included in funnelback_classic.ftl and funnelback.ftl.  This extends the basic faceted navigation tags to support checkbox faceting as well as adding a some new macros.
 			
@@ -228,24 +228,29 @@ Displays all the currently applied facets
 @param recursionDepth
 -->
 
-<#macro AppliedFacets catdefs=.namespace.facetDef.categoryDefinitions recursionDepth=0>
+<#macro AppliedFacets catdefs=.namespace.facetDef.categoryDefinitions recursionDepth=0 groupTag="ul" tag="li" class="">
 <#compress><#if question.selectedFacets?seq_contains(.namespace.facet.name)>
     <#list catdefs as catdef>
-		<#if question.selectedCategoryValues[catdef.queryStringParamName]?exists>
-			<#assign subFacet=false in .namespace />
-			<#list question.selectedCategoryValues[catdef.queryStringParamName] as sf>
-				<#assign appliedFacetLink=question.collection.configuration.value("ui.modern.search_link")+"?"+urlDecode(removeParam(facetScopeRemove(QueryString, catdef.queryStringParamName),["start_rank"]))?replace(catdef.queryStringParamName+"="+sf,"")?replace("&+","&","r")?replace("&$","","r") in .namespace/>
-				<#assign appliedFacetLabel=sf in .namespace />
-				<#if recursionDepth &gt; 0>
-					<#assign subFacet=true in .namespace />
-				</#if>
-				<#nested>
-			</#list>
-			<#if catdef.subCategories?exists && catdef.subCategories?size &gt; 0>
-				<@AppliedFacets catdefs=catdef.subCategories recursionDepth=recursionDepth+1><#nested></@AppliedFacets>
-			</#if>
-		</#if>
-	</#list>
+                <#if question.selectedCategoryValues[catdef.queryStringParamName]?exists>
+                <#assign subFacet=false in .namespace />
+                <#list question.selectedCategoryValues[catdef.queryStringParamName] as sf>
+                        <#assign qString = removeParam(urlDecode(QueryString), "start_rank")?replace(catdef.queryStringParamName+"="+sf,"")?replace("&+","&","r")?replace("&$","","r") />
+                        <#list catdef.allQueryStringParamNames as qsp>
+                                <#assign qString = removeParam(qString, qsp) />
+                        </#list>
+                        <#assign appliedFacetLink=question.collection.configuration.value("ui.modern.search_link")+"?"+qString in .namespace/>
+                        <#assign appliedFacetLabel=sf in .namespace />
+                        <#if recursionDepth &gt; 0>
+                                <#assign subFacet=true in .namespace />
+                        </#if>
+                        <#assign qString = removeParam(urlDecode(QueryString), "start_rank")?replace(catdef.queryStringParamName+"="+sf,"")?replace("&+","&","r")?replace("&$","","r") />
+                        <#nested>
+        </#list>
+                <#if catdef.subCategories?exists && catdef.subCategories?size &gt; 0>
+                        <@AppliedFacets catdefs=catdef.subCategories recursionDepth=recursionDepth+1 class=class><#nested></@AppliedFacets>
+                </#if>
+                </#if>
+        </#list>
 </#if></#compress>
 </#macro>
 
@@ -321,7 +326,7 @@ link for expansion, you'll need to use Javascript. See the default form file for
 
 
                         <#local nbCategories = nbCategories+1 />
-                        <#if nbCategories &gt; max>[BRK]<#break></#if>
+                        <#if nbCategories &gt; max><#break></#if>
 						<#if tag !=""><${tag} class="${class}"></#if>
                         <#nested>
 						<#if tag !=""></${tag}></#if>
