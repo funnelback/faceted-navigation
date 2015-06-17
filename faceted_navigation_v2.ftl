@@ -2,7 +2,7 @@
     Faceted Navigation tags
 	
 	Author: Peter Levan, Dec 2014
-	Version: 10 Jun 2015 
+	Version: 17 Jun 2015 
 	
 	Faceted navigation macros based on the faceted navigaton tag set included in funnelback_classic.ftl and funnelback.ftl.  This extends the basic faceted navigation tags to support checkbox faceting as well as adding a some new macros.
 			
@@ -108,7 +108,6 @@
     </#if>	
 </#macro>
 
-
 <#---
     Displays a facet, a list of facets, or all facets.
 
@@ -203,7 +202,6 @@ currently selected facet(s) only.</p>
 </#if>
 </#if>
 </#compress></#macro>
-<#--- @end -->
 
 <#---
 Displays a link that, when clicked, clears all the selected categories for the selected facet.
@@ -219,41 +217,40 @@ Displays a link that, when clicked, clears all the selected categories for the s
 </#if>
 </#macro>
 
-
-
 <#---
 Displays all the currently applied facets
 
 @param catdefs
 @param recursionDepth
 -->
-
-<#macro AppliedFacets catdefs=.namespace.facetDef.categoryDefinitions recursionDepth=0 groupTag="ul" tag="li" class="">
+<#macro AppliedFacets catdefs=.namespace.facetDef.categoryDefinitions recursionDepth=0>
 <#compress><#if question.selectedFacets?seq_contains(.namespace.facet.name)>
     <#list catdefs as catdef>
-                <#if question.selectedCategoryValues[catdef.queryStringParamName]?exists>
-                <#assign subFacet=false in .namespace />
-                <#list question.selectedCategoryValues[catdef.queryStringParamName] as sf>
-                        <#assign qString = removeParam(urlDecode(QueryString), "start_rank")?replace(catdef.queryStringParamName+"="+sf,"")?replace("&+","&","r")?replace("&$","","r") />
-                        <#list catdef.allQueryStringParamNames as qsp>
-                                <#assign qString = removeParam(qString, qsp) />
-                        </#list>
-                        <#assign appliedFacetLink=question.collection.configuration.value("ui.modern.search_link")+"?"+qString in .namespace/>
-                        <#assign appliedFacetLabel=sf in .namespace />
-                        <#if recursionDepth &gt; 0>
-                                <#assign subFacet=true in .namespace />
-                        </#if>
-                        <#assign qString = removeParam(urlDecode(QueryString), "start_rank")?replace(catdef.queryStringParamName+"="+sf,"")?replace("&+","&","r")?replace("&$","","r") />
-                        <#nested>
-        </#list>
-                <#if catdef.subCategories?exists && catdef.subCategories?size &gt; 0>
-                        <@AppliedFacets catdefs=catdef.subCategories recursionDepth=recursionDepth+1 class=class><#nested></@AppliedFacets>
-                </#if>
-                </#if>
-        </#list>
+		<#if question.selectedCategoryValues[catdef.queryStringParamName]?exists>
+			<#assign subFacet=false in .namespace />
+			<#list question.selectedCategoryValues[catdef.queryStringParamName] as sf>
+				<#assign QueryStringRemove = removeParam(removeParamVal(facetScopeRemoveVal(QueryString, catdef.queryStringParamName, sf), catdef.queryStringParamName, sf), ["start_rank"]) />
+				<#list catdef.allQueryStringParamNames as qsp>
+					<#if qsp != catdef.queryStringParamName><#assign QueryStringRemove = removeParam(facetScopeRemove(QueryStringRemove, qsp), qsp) /></#if>
+				</#list>
+				<#assign appliedFacetLink = question.collection.configuration.value("ui.modern.search_link")+"?"+QueryStringRemove in .namespace />
+				<#if question.collection.configuration.value("faceted_navigation."+.namespace.facet.name+".rename."+sf)?exists>
+					<#assign appliedFacetLabel=question.collection.configuration.value("faceted_navigation."+.namespace.facet.name+".rename."+sf) in .namespace />
+				<#else>
+ 					<#assign appliedFacetLabel=getAppliedFacetLabel(.namespace.facet.name, sf)  />
+				</#if>
+				<#if recursionDepth &gt; 0>
+					<#assign subFacet=true in .namespace />
+				</#if>
+				<#nested>
+			</#list>
+			<#if catdef.subCategories?exists && catdef.subCategories?size &gt; 0>
+				<@AppliedFacets catdefs=catdef.subCategories recursionDepth=recursionDepth+1><#nested></@AppliedFacets>
+			</#if>
+		</#if>
+	</#list>
 </#if></#compress>
 </#macro>
-
 
 <#---
 Displays a faceted navigation category.
@@ -299,15 +296,16 @@ link for expansion, you'll need to use Javascript. See the default form file for
                         <#assign categoryValue = cv in .namespace/>
                         <#assign categoryValue_has_next = cv_has_next in .namespace/>
                         <#assign categoryValue_index = cv_index in .namespace/>
+                        <#assign cvQueryStringParam = cv.queryStringParam in .namespace>
+						<#assign cvConstraint = cv.constraint in .namespace>
+
 						<#-- Construct a HTML link for the category -->
 						<#assign paramName = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[0])>
 						<#assign paramValue = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[1])>
-						<#assign QueryStringRemove = urlDecode(QueryString)?replace(urlDecode(.namespace.categoryValue.queryStringParam),"")?replace("&+","&","r")?replace("&$","","r")>
-						<#local checked = question.selectedCategoryValues[paramName]?exists && question.selectedCategoryValues[paramName]?seq_contains(paramValue) />
-												
-						<#assign cvQueryStringParam = cv.queryStringParam in .namespace>
-						<#assign cvConstraint = cv.constraint in .namespace>
-						<#if question.selectedCategoryValues[c.queryStringParamName]?exists && question.selectedCategoryValues[c.queryStringParamName]?seq_contains(cv.label)>
+						<#assign QueryStringRemove = removeParamVal(facetScopeRemoveVal(QueryString, paramName, paramValue), paramName, paramValue)>
+						<#local checked = question.selectedCategoryValues[paramName]?? && question.selectedCategoryValues[paramName]?seq_contains(paramValue) />
+
+						<#if checked>
 							<#assign checked = true in .namespace/> 
 						<#else>
 							<#assign checked = false in .namespace/> 
@@ -315,10 +313,9 @@ link for expansion, you'll need to use Javascript. See the default form file for
 
 						<#if .namespace.checkbox>
 							<#if checked>
-							  <#--${question.collection.configuration.value("ui.modern.search_link")}?${removeParam(QueryStringRemove,["start_rank"])}-->
 							  <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"]) in .namespace/>
 							<#else>
-							  <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
+							  <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove, ["start_rank"])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
 							</#if>
 						<#else>
 							<#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(facetScopeRemove(QueryString, paramName), ["start_rank", paramName])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
@@ -338,9 +335,7 @@ link for expansion, you'll need to use Javascript. See the default form file for
                     <@Category recursionCategories=c.categories max=max tag=tag class=class nbCategories=nbCategories><#nested></@Category>
                 </#if>
             </#list>
-
         </#if>
-
 </#macro>
 
 <#macro listCategories type constraint>
@@ -351,12 +346,9 @@ link for expansion, you'll need to use Javascript. See the default form file for
 
 <#list cats?keys as c>
 ${c} : ${cats[c]}
-
 </#list>
 
 </#if>
-
-
 
 </#macro>
 
@@ -397,7 +389,7 @@ Displays a link for a facet category value.
 <#if .namespace.categoryValue?exists>
 <#assign paramName = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[0])>
 <#assign paramValue = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[1])>
-<#assign QueryStringRemove = urlDecode(QueryString)?replace(urlDecode(.namespace.categoryValue.queryStringParam),"")?replace("&+","&","r")?replace("&$","","r")>
+<#assign QueryStringRemove = removeParamVal(facetScopeRemoveVal(QueryString, paramName, paramValue), paramName, paramValue)>
 <#local checked = question.selectedCategoryValues[paramName]?exists && question.selectedCategoryValues[paramName]?seq_contains(paramValue) />
 
 <#if .namespace.checkbox>
@@ -430,7 +422,6 @@ Displays the result count for a facet category value.
 </#if>
 </#compress></#macro>
 
-
 <#---
 Displays a link that, when clicked, clears all the facets.
 
@@ -441,7 +432,6 @@ Displays a link that, when clicked, clears all the facets.
 <a href="${.namespace.clearAllFacetsLink?html}" title="${title}" class="${class}">${clearAllText?html} <span class="glyphicon glyphicon-remove-circle"></span></a>
 </#if>
 </#macro>
-
 
 <#---
 Displays a link to show more or less categories for a facet.
@@ -587,28 +577,80 @@ Recursively generates the breadcrumbs for a facet.
 </#list>
 </#macro>
 
-
 <#--
 Returns a href link url for a facet category value.
  -->
-
 <#macro CategoryLinkAddress>
 <#if .namespace.categoryValue?exists>
   <#assign paramName = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[0])>
   <#assign paramValue = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[1])>
-  <#assign QueryStringRemove = QueryString?replace(.namespace.categoryValue.queryStringParam,"")?replace("&+","&","r")?replace("&$","","r")>
+  <#assign QueryStringRemove = removeParamVal(facetScopeRemoveVal(QueryString, paramName, paramValue), paramName, paramValue)>
   <#assign checked = question.selectedCategoryValues[paramName]?exists && question.selectedCategoryValues[paramName]?seq_contains(paramValue) in .namespace/>
 
   <#if .namespace.checkbox>
     <#if checked>
 	<#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"]) in .namespace/>
     <#else>
-      <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"])+"&amp;"+.namespace.categoryValue.queryStringParam in .namespace />
+      <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
     </#if>
   <#else>
-    <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(facetScopeRemove(QueryString, paramName), ["start_rank", paramName])+"&amp;"+.namespace.categoryValue.queryStringParam in .namespace />
+    <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(facetScopeRemove(QueryString, paramName), ["start_rank", paramName])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
   </#if>
 </#if>
 </#macro>
 
+<#---
+	Remove from query string parameter of given name and value
+-->
+<#function removeParamVal queryString paramName paramVal>
+	<#local queries = queryString?split("&",'r') />
+	<#list queries as query>
+		<#local params = query?split("=", "r") />
+		<#if urlDecode(params[0]) == urlDecode(paramName) && urlDecode(params[1]) == urlDecode(paramVal)>
+			<#if query_index == 0>
+				<#local queries = queries[query_index+1..] />
+			<#elseif !query_has_next>
+				<#local queries = queries[0..query_index-1] />
+			<#else>
+				<#local queries = queries[0..query_index-1] + queries[query_index+1..] />
+			</#if>
+		</#if>
+	</#list>
+	<#return queries?join('&') />
+</#function>
 
+<#function facetScopeRemoveVal queryString paramName paramVal>
+	<#local m = queryString?matches("^(.*?)(facetScope=)(.*?)(&|$)") />
+	<#if m == true >
+		<#local facetScope = m[0]?groups[3] />
+		<#return queryString?replace(facetScope, removeParamVal(urlDecode(facetScope), paramName, paramVal)?url) />
+	</#if>
+	<#return queryString />
+</#function>
+
+<#-- Find the label for category in given facet. For nearly all categories the label is equal to the value returned by the query processor, 
+but not for date counts for example. With date counts the label is the actual year "2003" or a "past 3 weeks" but the value is the constraint 
+to apply like "d=2003" or "d>12Jun2012" -->
+<#-- Use value by default if we can't find a label -->
+<#function getAppliedFacetLabel facetName paramValue>
+	<#local referenceFacet = response.facets/>
+    <#if extraSearches?exists
+            && extraSearches[ExtraSearches.FACETED_NAVIGATION]?exists
+            && extraSearches[ExtraSearches.FACETED_NAVIGATION].response?exists
+            && extraSearches[ExtraSearches.FACETED_NAVIGATION].response.facets?exists>
+        <#local referenceFacet = extraSearches[ExtraSearches.FACETED_NAVIGATION].response.facets/>
+    </#if>
+
+    <#-- Iterate over generated facets -->
+	<#list referenceFacet as facet>
+		<#if facetName == facet.name>
+			<#list facet.categories[0].values as val>
+				<#if urlDecode(val.queryStringParam?split("=", "r")[1]) == paramValue>
+					<#return val.label />
+				</#if>
+			</#list>
+		</#if>
+	</#list>
+
+	<#return paramValue />
+</#function>
