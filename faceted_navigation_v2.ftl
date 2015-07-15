@@ -616,6 +616,13 @@ Returns a href link url for a facet category value.
 			</#if>
 		</#if>
 	</#list>
+	<#-- use this Funnelback 14.0 and earlier -->
+	<#--
+    <#local qs = '' />
+    <#list queries as query><#local qs = qs + query + '&' /></#list>
+    <#return qs?replace('&$', '', 'r') />
+	-->
+	<#-- works in Funnelback 14.2 -->
 	<#return queries?join('&') />
 </#function>
 
@@ -644,11 +651,13 @@ to apply like "d=2003" or "d>12Jun2012" -->
     <#-- Iterate over generated facets -->
 	<#list referenceFacet as facet>
 		<#if facetName == facet.name>
-			<#list facet.categories[0].values as val>
-				<#if urlDecode(val.queryStringParam?split("=", "r")[1]) == paramValue>
-					<#return val.label />
-				</#if>
-			</#list>
+			<#if facet.categories[0]??>
+				<#list facet.categories[0].values as val>
+					<#if urlDecode(val.queryStringParam?split("=", "r")[1]) == paramValue>
+						<#return val.label />
+					</#if>
+				</#list>
+			</#if>
 		</#if>
 	</#list>
 
