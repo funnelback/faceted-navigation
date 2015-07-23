@@ -603,6 +603,7 @@ Returns a href link url for a facet category value.
 	Remove from query string parameter of given name and value
 -->
 <#function removeParamVal queryString paramName paramVal>
+	<#-- works in Funnelback 14.2 -->
 	<#local queries = queryString?split("&",'r') />
 	<#list queries as query>
 		<#local params = query?split("=", "r") />
@@ -616,14 +617,23 @@ Returns a href link url for a facet category value.
 			</#if>
 		</#if>
 	</#list>
-	<#-- use this Funnelback 14.0 and earlier -->
+	<#return queries?join('&') />
+
+	<#-- works in v14.0 and earlier -->
 	<#--
+	<#local queries = queryString?split("&",'r') />
+    <#local queriesnew = []>
+	<#list queries as query>
+		<#local params = query?split("=", "r") />
+		<#if urlDecode(params[0]) == urlDecode(paramName) && urlDecode(params[1]) == urlDecode(paramVal)>
+        <#else>
+			<#local queriesnew = queriesnew + [query] />
+		</#if>
+	</#list>
     <#local qs = '' />
-    <#list queries as query><#local qs = qs + query + '&' /></#list>
+    <#list queriesnew as query><#local qs = qs + query + '&' /></#list>
     <#return qs?replace('&$', '', 'r') />
 	-->
-	<#-- works in Funnelback 14.2 -->
-	<#return queries?join('&') />
 </#function>
 
 <#function facetScopeRemoveVal queryString paramName paramVal>
