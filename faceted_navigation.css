@@ -1,0 +1,49 @@
+/* Additional styles for Faceted Navigation */
+.appliedFacets {
+        background: none repeat scroll 0 0 #efefef;
+        border: 1px solid #efefef;
+        border-radius: 2px;
+        font-size: x-small;
+        font-weight: bold;
+        height: 45px;
+        margin-right: 2px;
+        padding: 6px 0 8px 6px;
+    }
+     
+    .appliedFacets,
+    .appliedFacets ul {
+       display: inline;
+    }
+     
+    .appliedFacets ul {
+        margin: 0;
+        padding: 0;
+    }
+     
+    .appliedFacets ul:before{
+        content: ":";
+    }
+     
+    .appliedFacets ul li {
+        display: inline;
+    }
+     
+    .appliedFacets ul li:first-child {
+        border-left: 0px;
+    }
+     
+    .appliedFacets ul li a {
+        color: #fff;
+    }
+
+/*Facets styling fix*/
+.category {
+  display: block;
+  float: left;
+  width:100%;
+  margin-bottom: 0.2em;
+  padding-bottom: 0.2em;
+  border-bottom:1px dotted #aaa7a7;
+}
+
+.category > span { max-width: 80%; display: block; float: left;}
