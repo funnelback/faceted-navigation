@@ -1,51 +1,48 @@
 <#---
     Faceted Navigation tags
-	
-	Author: Peter Levan, Dec 2014
-	Version: 17 Jun 2015 
-	
-	Faceted navigation macros based on the faceted navigaton tag set included in funnelback_classic.ftl and funnelback.ftl.  This extends the basic faceted navigation tags to support checkbox faceting as well as adding a some new macros.
-			
+  
+  Author: Peter Levan, Dec 2014
+  Version: 27 Feb 2018 
+  
+  Faceted navigation macros based on the faceted navigaton tag set included in funnelback_classic.ftl and funnelback.ftl.  This extends the basic faceted navigation tags to support checkbox faceting as well as adding a some new macros.
+      
 -->
 <#--
-	Global variables defined within the namespace of the faceted navigation library
-
-	Template-level variables (defined once template is imported)
-	* clearAllFacetsLink: Returns link (when clicked) that will clear all the applied facets.
+  Global variables defined within the namespace of the faceted navigation library
+  Template-level variables (defined once template is imported)
+  * clearAllFacetsLink: Returns link (when clicked) that will clear all the applied facets.
     
-	Facet-level variables (use inside @Facet)
-	* checkbox: (boolean) - indicates if the facet is a checkbox style facet (true) or standard facet (false)
+  Facet-level variables (use inside @Facet)
+  * checkbox: (boolean) - indicates if the facet is a checkbox style facet (true) or standard facet (false)
     * checkboxMode: (link|form) - indicates type of checkbox faceting to use - use HTML links (link=def) or input checkbox elements
-	* clearCurrentFacetLink: Returns link  (when clicked) that will clear the current facets.
+  * clearCurrentFacetLink: Returns link  (when clicked) that will clear the current facets.
     * facet
-		- facet.name
+    - facet.name
     * facet_index
     * facet_has_next
     * facetDef
     * facetDef_index
     * facetDef_has_next
-
-	Category-level variables (use inside @Category)
+  Category-level variables (use inside @Category)
     * categoryLinkAddress: Returns link for the category value.  When clicked will apply (or remove, if applied) the current facet taking in to consideration other applied categories.
     * checked: (boolean) - indicates if the current category value is currently applied (used for checkbox faceting)
     * category
     * category_hax_next
     * category_index
-	* categoryValue
-		- categoryValue.label
-		- categoryValue.count
-	* categoryValue_has_next
-	* categoryValue_index
-	* cvQueryStringParam
-	* cvConstraint
-
-	Nesting:
-	
-	FacetedSearch
-	- Facet
-	  - CheckboxForm (opt)
-	    - Category
-	
+  * categoryValue
+    - categoryValue.label
+    - categoryValue.count
+  * categoryValue_has_next
+  * categoryValue_index
+  * cvQueryStringParam
+  * cvConstraint
+  Nesting:
+  
+  FacetedSearch
+  - Facet
+    - CheckboxForm (opt)
+      - Category
+  
 -->
 
 <#-- generate the link that can be used to reset all of the facets -->
@@ -59,32 +56,30 @@
 
 <#---
     Conditional display against faceted navigation.
-
     <p>The content will be evaluated only if faceted navigation
     is configured.</p>
-	
-	@param negate Whether to negate the tag, i.e. evaluate the content if faceted navigation is not configured.
+  
+  @param negate Whether to negate the tag, i.e. evaluate the content if faceted navigation is not configured.
 -->
 <#macro FacetedSearch negate=false>
-	<#if !negate>
-		<#if question?exists
-			&& facetedNavigationConfig(question.collection, question.profile)?exists >
-			<#nested>
-		</#if>
-	<#else>
-		<#if !question?exists
-			|| !facetedNavigationConfig(question.collection, question.profile)?exists >
-			<#nested>
-		</#if>
+  <#if !negate>
+    <#if question?exists
+      && facetedNavigationConfig(question.collection, question.profile)?exists >
+      <#nested>
+    </#if>
+  <#else>
+    <#if !question?exists
+      || !facetedNavigationConfig(question.collection, question.profile)?exists >
+      <#nested>
+    </#if>
     </#if>
 </#macro>
 
 <#---
     Return necessary HTML to produce a form containing the facets as HTML checkbox input elements.
-	
-	This should wrap the Category tag if form-based checkbox faceting is being used.
-
-	@param negate Whether to negate the tag, i.e. evaluate the content if faceted navigation is not configured.
+  
+  This should wrap the Category tag if form-based checkbox faceting is being used.
+  @param negate Whether to negate the tag, i.e. evaluate the content if faceted navigation is not configured.
 -->
 <#macro CheckboxForm submitText="Apply" submitClass="button">
     <#local fs><@FacetScope input=false facetRemove=.namespace.facet.name/></#local>
@@ -99,28 +94,25 @@
             <#if question.inputParameterMap["query"]?exists><input type="hidden" name="query" value="${question.inputParameterMap["query"]!}"></#if>
             <#if question.inputParameterMap["checkbox"]?exists><input type="hidden" name="checkbox" value="${question.inputParameterMap["checkbox"]!}"></#if>
             <#if question.inputParameterMap["checkboxmode"]?exists><input type="hidden" name="checkboxmode" value="${question.inputParameterMap["checkboxmode"]!}"></#if>
-			<input type="hidden" name="facetScope" value="${fs}">
-	</#if>
-	<#nested>
+      <input type="hidden" name="facetScope" value="${fs}">
+  </#if>
+  <#nested>
     <#if checkbox && checkboxMode == "form">
-			<button type="submit" class="${submitClass}"><span class="glyphicon glyphicon-filter"></span> ${submitText}</button>
-		</form>
-    </#if>	
+      <button type="submit" class="${submitClass}"><span class="glyphicon glyphicon-filter"></span> ${submitText}</button>
+    </form>
+    </#if>  
 </#macro>
 
 <#---
     Displays a facet, a list of facets, or all facets.
-
     <p>If both <code>name</code> and <code>names</code> are not set
     this tag iterates over all the facets.</p>
-
-	Should be nested inside the FacetedSearch tag.
-	
+  Should be nested inside the FacetedSearch tag.
+  
     @param name Name of a specific facet to display, optional.
-    @param names A list of specific facets to display, optional. Won't affect facet display order (defined in <code>faceted_navigation.cfg</code>).
+    @param names A list of specific facets to display, in that order, optional.
     @param checkbox Boolean to enable checkbox facet mode allowing multiple facet selection. checkboxes are disabled by default.
     @param checkboxMode Use link or form mode for display of checkbox facets. Acceptable values are link (defualt) and form.
-
     @provides The facet as <code>${.namespace.facet}</code>.
 -->
 <#macro Facet name="" names=[] checkbox=false checkboxMode="link">
@@ -142,43 +134,74 @@
   </#if> <#--if  checkbox etc -->
 
   <#if facetResponse?exists>
-  <#list facetResponse.facets as f>
-    <#if ((name == "" && names?size == 0) 
-          || ((f.name == name || names?seq_contains(f.name) ) && (f.hasValues() || question.selectedFacets?seq_contains(f.name))))>
-      <#assign facet = f in .namespace>
-      <#assign facet_index = f_index in .namespace>
-      <#assign facet_has_next = f_has_next in .namespace>
-      <#if fn?exists>
-      <#-- Find facet definition in the configuration corresponding
-           to the facet we're currently displaying -->
-        <#list fn.facetDefinitions as fdef>
-          <#if fdef.name == .namespace.facet.name>
-            <#assign facetDef = fdef in .namespace />
-            <#assign facetDef_index = fdef_index in .namespace />
-            <#assign facetDef_has_next = fdef_has_next in .namespace />
+    <#-- if names is set then render the facets in the order as defined in the names sequence -->
+    <#if names?size != 0>
+      <#list names as fname>
+        <#list facetResponse.facets as f>
+          <#if ( f.name == fname && (f.hasValues() || question.selectedFacets?seq_contains(f.name)))>
+            <#assign facet = f in .namespace>
+            <#assign facet_index = f_index in .namespace>
+            <#assign facet_has_next = f_has_next in .namespace>
+            <#if fn?exists>
+            <#-- Find facet definition in the configuration corresponding
+               to the facet we're currently displaying -->
+              <#list fn.facetDefinitions as fdef>
+                <#if fdef.name == .namespace.facet.name>
+                  <#assign facetDef = fdef in .namespace />
+                  <#assign facetDef_index = fdef_index in .namespace />
+                  <#assign facetDef_has_next = fdef_has_next in .namespace />
+                </#if>
+              </#list>
+
+              <#-- Generate the link to clear this facet -->
+              <#if QueryString?contains("f." + facetDef.name?url)
+                || urlDecode(QueryString)?contains("f." + facetDef.name)
+                || urlDecode(QueryString)?contains("f." + facetDef.name?url)>
+                <#assign clearCurrentFacetLink = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(facetScopeRemove(QueryString, facetDef.allQueryStringParamNames), ["start_rank"] + facetDef.allQueryStringParamNames) in .namespace />
+              </#if>
+
+            </#if> <#-- if fn?exists -->
+            <#nested>
           </#if>
         </#list>
+      </#list>
+    <#else>
+      <#list facetResponse.facets as f>
+        <#if ((name == "" && names?size == 0) 
+          || (f.name == name || names?seq_contains(f.name) )) && (f.hasValues() || question.selectedFacets?seq_contains(f.name))>
+          <#assign facet = f in .namespace>
+          <#assign facet_index = f_index in .namespace>
+          <#assign facet_has_next = f_has_next in .namespace>
+          <#if fn?exists>
+          <#-- Find facet definition in the configuration corresponding
+              to the facet we're currently displaying -->
+            <#list fn.facetDefinitions as fdef>
+              <#if fdef.name == .namespace.facet.name>
+                <#assign facetDef = fdef in .namespace />
+                <#assign facetDef_index = fdef_index in .namespace />
+                <#assign facetDef_has_next = fdef_has_next in .namespace />
+              </#if>
+            </#list>
 
-		<#-- Generate the link to clear this facet -->
-		<#if QueryString?contains("f." + facetDef.name?url)
-		|| urlDecode(QueryString)?contains("f." + facetDef.name)
-		|| urlDecode(QueryString)?contains("f." + facetDef.name?url)>
-			<#assign clearCurrentFacetLink = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(facetScopeRemove(QueryString, facetDef.allQueryStringParamNames), ["start_rank"] + facetDef.allQueryStringParamNames) in .namespace />
-		</#if>
+            <#-- Generate the link to clear this facet -->
+            <#if QueryString?contains("f." + facetDef.name?url)
+              || urlDecode(QueryString)?contains("f." + facetDef.name)
+              || urlDecode(QueryString)?contains("f." + facetDef.name?url)>
+              <#assign clearCurrentFacetLink = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(facetScopeRemove(QueryString, facetDef.allQueryStringParamNames), ["start_rank"] + facetDef.allQueryStringParamNames) in .namespace />
+            </#if>
 
-  	  </#if> <#-- if fn?exists -->
-      <#nested>
+          </#if> <#-- if fn?exists -->
+          <#nested>
+        </#if>
+      </#list>
     </#if>
-  </#list>
   </#if>
 </#macro>
 
 <#---
 Display the <em>facet scope</em> checkbox.
-
 <p>Provides a checkbox to constraint search to the
 currently selected facet(s) only.</p>
-
 @nested Text to display beside the checkbox.
 @facetRemove Don't include items from specified facet in the facetscope. 
 -->
@@ -186,13 +209,13 @@ currently selected facet(s) only.</p>
 <#if question?exists && question.selectedCategoryValues?size &gt; 0>
 <#local facetScope = "" />
 <#list question.selectedCategoryValues?keys as key>
-	<#if facetRemove != key?replace("^f\\.","","r")?replace("\\|\\w+$","","r")>
-		<#list question.selectedCategoryValues[key] as value>
-		<#local facetScope = facetScope + key?url+"="+value?url />
-		<#if value_has_next><#local facetScope = facetScope + "&" /></#if>
-		</#list>
-		<#if key_has_next><#local facetScope = facetScope + "&" /></#if>
-	</#if>
+  <#if facetRemove != key?replace("^f\\.","","r")?replace("\\|\\w+$","","r")>
+    <#list question.selectedCategoryValues[key] as value>
+    <#local facetScope = facetScope + key?url+"="+value?url />
+    <#if value_has_next><#local facetScope = facetScope + "&" /></#if>
+    </#list>
+    <#if key_has_next><#local facetScope = facetScope + "&" /></#if>
+  </#if>
 </#list> 
 <#if input>
     <input type="checkbox" name="facetScope" id="facetScope" value="${facetScope}" checked="checked">
@@ -205,7 +228,6 @@ currently selected facet(s) only.</p>
 
 <#---
 Displays a link that, when clicked, clears all the selected categories for the selected facet.
-
 @param clearAllText Optional link text to display.
 -->
 <#macro ResetFacetLink clearAllText="Clear selected" class="resetFacetLink">
@@ -219,56 +241,51 @@ Displays a link that, when clicked, clears all the selected categories for the s
 
 <#---
 Displays all the currently applied facets
-
 @param catdefs
 @param recursionDepth
 -->
 <#macro AppliedFacets catdefs=.namespace.facetDef.categoryDefinitions recursionDepth=0>
 <#compress><#if question.selectedFacets?seq_contains(.namespace.facet.name)>
     <#list catdefs as catdef>
-		<#if question.selectedCategoryValues[catdef.queryStringParamName]?exists>
-			<#assign subFacet=false in .namespace />
-			<#list question.selectedCategoryValues[catdef.queryStringParamName] as sf>
-				<#assign QueryStringRemove = removeParam(removeParamVal(facetScopeRemoveVal(QueryString, catdef.queryStringParamName, sf), catdef.queryStringParamName, sf), ["start_rank"]) />
-				<#list catdef.allQueryStringParamNames as qsp>
-					<#if qsp != catdef.queryStringParamName><#assign QueryStringRemove = removeParam(facetScopeRemove(QueryStringRemove, qsp), qsp) /></#if>
-				</#list>
-				<#assign appliedFacetLink = question.collection.configuration.value("ui.modern.search_link")+"?"+QueryStringRemove in .namespace />
-				<#if question.collection.configuration.value("faceted_navigation."+.namespace.facet.name+".rename."+sf)?exists>
-					<#assign appliedFacetLabel=question.collection.configuration.value("faceted_navigation."+.namespace.facet.name+".rename."+sf) in .namespace />
-				<#else>
- 					<#assign appliedFacetLabel=getAppliedFacetLabel(.namespace.facet.name, sf)  />
-				</#if>
-				<#if recursionDepth &gt; 0>
-					<#assign subFacet=true in .namespace />
-				</#if>
-				<#nested>
-			</#list>
-			<#if catdef.subCategories?exists && catdef.subCategories?size &gt; 0>
-				<@AppliedFacets catdefs=catdef.subCategories recursionDepth=recursionDepth+1><#nested></@AppliedFacets>
-			</#if>
-		</#if>
-	</#list>
+    <#if question.selectedCategoryValues[catdef.queryStringParamName]?exists>
+      <#assign subFacet=false in .namespace />
+      <#list question.selectedCategoryValues[catdef.queryStringParamName] as sf>
+        <#assign QueryStringRemove = removeParam(removeParamVal(facetScopeRemoveVal(QueryString, catdef.queryStringParamName, sf), catdef.queryStringParamName, sf), ["start_rank"]) />
+        <#list catdef.allQueryStringParamNames as qsp>
+          <#if qsp != catdef.queryStringParamName><#assign QueryStringRemove = removeParam(facetScopeRemove(QueryStringRemove, qsp), qsp) /></#if>
+        </#list>
+        <#assign appliedFacetLink = question.collection.configuration.value("ui.modern.search_link")+"?"+QueryStringRemove in .namespace />
+        <#if question.collection.configuration.value("faceted_navigation."+.namespace.facet.name+".rename."+sf)?exists>
+          <#assign appliedFacetLabel=question.collection.configuration.value("faceted_navigation."+.namespace.facet.name+".rename."+sf) in .namespace />
+        <#else>
+          <#assign appliedFacetLabel=getAppliedFacetLabel(.namespace.facet.name, sf)  />
+        </#if>
+        <#if recursionDepth &gt; 0>
+          <#assign subFacet=true in .namespace />
+        </#if>
+        <#nested>
+      </#list>
+      <#if catdef.subCategories?exists && catdef.subCategories?size &gt; 0>
+        <@AppliedFacets catdefs=catdef.subCategories recursionDepth=recursionDepth+1><#nested></@AppliedFacets>
+      </#if>
+    </#if>
+  </#list>
 </#if></#compress>
 </#macro>
 
 <#---
 Displays a faceted navigation category.
-
 <p>The presence of the <code>name</code> parameter determines the role.</p>
 <p>The <code>nbCategories</code> and <code>recursionCategories</code> parameters
 are internals and can be safely ignored when using this tag.</p>
-
 <p>For faceted navigation the <tt>max</tt> parameter sets the maximum number of
 categories to return. If you need to display only a few number of them with a <em>more...</em>
 link for expansion, you'll need to use Javascript. See the default form file for an example.</p>
-
 @param name Name of the category for contextual navigation. Can be <code>type</code>, <code>type</code> or <code>topic</code>. Empty for a faceted navigation category.
 @param max Maximum number of categories to display, for faceted navigation.
 @param nbCategories (Internal parameter, do not use) Current number of categories displayed (used in recursion for faceted navigation).
 @param recursionCategories (Internal parameter, do not use) List of categories to process when recursing for faceted navigation).
 @param tag HTML tag to wrap faceted navigation categories (defaults to DIV).
-
 @provides The category as <code>${s.category}</code>.
 -->
 <#macro Category max=16 nbCategories=0 recursionCategories=[] tag="div" class="category" name...>
@@ -284,50 +301,50 @@ link for expansion, you'll need to use Javascript. See the default form file for
                 <#assign category = c in .namespace />
                 <#assign category_hax_next = c_has_next in .namespace />
                 <#assign category_index = c_index in .namespace />
-				<#assign categoryQueryStringParamName = c.queryStringParamName in .namespace/>
-			
-				<#list c.values as cv>
+        <#assign categoryQueryStringParamName = c.queryStringParamName in .namespace/>
+      
+        <#list c.values as cv>
                     <#-- Find if this category has been selected. If it's the case, don't display
                          it in the list, except if it's an URL fill facet as we must display sub-folders
                          of the currently selected folder, or it's a checkbox facet-->
                     <#if (!question.selectedCategoryValues?keys?seq_contains(urlDecode(cv.queryStringParam?split("=")[0])))
                         || c.queryStringParamName?contains("|url") || .namespace.checkbox>
-						
+            
                         <#assign categoryValue = cv in .namespace/>
                         <#assign categoryValue_has_next = cv_has_next in .namespace/>
                         <#assign categoryValue_index = cv_index in .namespace/>
                         <#assign cvQueryStringParam = cv.queryStringParam in .namespace>
-						<#assign cvConstraint = cv.constraint in .namespace>
+            <#assign cvConstraint = cv.constraint in .namespace>
 
-						<#-- Construct a HTML link for the category -->
-						<#assign paramName = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[0])>
-						<#assign paramValue = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[1])>
-						<#assign QueryStringRemove = removeParamVal(facetScopeRemoveVal(QueryString, paramName, paramValue), paramName, paramValue)>
-						<#local checked = question.selectedCategoryValues[paramName]?? && question.selectedCategoryValues[paramName]?seq_contains(paramValue) />
+            <#-- Construct a HTML link for the category -->
+            <#assign paramName = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[0])>
+            <#assign paramValue = urlDecode(.namespace.categoryValue.queryStringParam?split("=")[1])>
+            <#assign QueryStringRemove = removeParamVal(facetScopeRemoveVal(QueryString, paramName, paramValue), paramName, paramValue)>
+            <#local checked = question.selectedCategoryValues[paramName]?? && question.selectedCategoryValues[paramName]?seq_contains(paramValue) />
 
-						<#if checked>
-							<#assign checked = true in .namespace/> 
-						<#else>
-							<#assign checked = false in .namespace/> 
-						</#if>
+            <#if checked>
+              <#assign checked = true in .namespace/> 
+            <#else>
+              <#assign checked = false in .namespace/> 
+            </#if>
 
-						<#if .namespace.checkbox>
-							<#if checked>
-							  <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"]) in .namespace/>
-							<#else>
-							  <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove, ["start_rank"])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
-							</#if>
-						<#else>
-							<#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(facetScopeRemove(QueryString, paramName), ["start_rank", paramName])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
-						</#if>
+            <#if .namespace.checkbox>
+              <#if checked>
+                <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"]) in .namespace/>
+              <#else>
+                <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove, ["start_rank"])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
+              </#if>
+            <#else>
+              <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(facetScopeRemove(QueryString, paramName), ["start_rank", paramName])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
+            </#if>
 
 
                         <#local nbCategories = nbCategories+1 />
                         <#if nbCategories &gt; max><#break></#if>
-						<#if tag !=""><${tag} class="${class}"></#if>
+            <#if tag !=""><${tag} class="${class}"></#if>
                         <#nested>
-						<#if tag !=""></${tag}></#if>
-					</#if>
+            <#if tag !=""></${tag}></#if>
+          </#if>
 
                 </#list>
                 <#-- Recurse in sub categories -->
@@ -356,7 +373,6 @@ ${c} : ${cats[c]}
 
 <#---
 Displays a facet label and a breadcrumb.
-
 @param class Optional class to affect to the div containing the facet and breadcrumb.
 @param separator Separator to use in the breadcrumb.
 @param summary Set to true if you want this tag to display the summary + breadcrumb, otherwise use <code>&lt;@s.FacetSummary /&gt;</code>.
@@ -374,7 +390,7 @@ Displays a facet label and a breadcrumb.
         <#assign facetDef_has_next = fdef_has_next in .namespace />
         <#if tag != ""><${tag} class="${class}"></#if> ${.namespace.facet.name}
             <#if summary><@FacetSummary separator=separator alltext="all" /></#if>
-		<#if tag != ""></${tag}></#if>	
+    <#if tag != ""></${tag}></#if>  
     </#if>
 </#list>
 </#if>
@@ -382,7 +398,6 @@ Displays a facet label and a breadcrumb.
 
 <#---
 Displays a link for a facet category value.
-
 @param class Optional CSS class to use, defaults to <code>categoryName</code>.
 -->
 <#macro CategoryName class="categoryName">
@@ -413,7 +428,6 @@ Displays a link for a facet category value.
 </#macro>
 <#---
 Displays the result count for a facet category value.
-
 @param class Optional CSS class.
 -->
 <#macro CategoryCount displayAlways=false><#compress>
@@ -424,7 +438,6 @@ Displays the result count for a facet category value.
 
 <#---
 Displays a link that, when clicked, clears all the facets.
-
 @param clearAllText Optional link text to display.
 -->
 <#macro ClearFacetsLink clearAllText="Clear all filters" class="clearFacetLink" title="Clear all filters">
@@ -442,10 +455,8 @@ Displays a link to show more or less categories for a facet.
 
 <#---
 Displays The facet summary and breadcrumb.
-
 <p>This tag is called by <code>&lt;@s.FacetLabel /&gt;</code> but this can be disabled
 so that the summary and breadcrumb can be displayed separately using this tag for more flexibility.</p>
-
 @param separator Separator to use in the breadcrumb.
 @param alltext Text to use to completely remove the facet constraints. Defaults to &quot;all&quot;.
 -->
@@ -453,22 +464,19 @@ so that the summary and breadcrumb can be displayed separately using this tag fo
 <#-- We must test various combinations here as different browsers will encode
  some characters differently (i.e. '/' will sometimes be preserved, sometimes
  encoded as '%2F' -->
-	<#if QueryString?contains("f." + facetDef.name?url)
-	|| urlDecode(QueryString)?contains("f." + facetDef.name)
-	|| urlDecode(QueryString)?contains("f." + facetDef.name?url)>
-		${prefix?html}${categoryPrepend}<a href="${question.collection.configuration.value("ui.modern.search_link")}?${removeParam(facetScopeRemove(QueryString, facetDef.allQueryStringParamNames), ["start_rank"] + facetDef.allQueryStringParamNames)?html}" class="${categoryLinkClass?html}">${alltext}</a>${categoryAppend}
-	</#if>
-	<@FacetBreadCrumb categoryDefinitions=facetDef.categoryDefinitions selectedCategoryValues=question.selectedCategoryValues separator=separator  categoryPrepend=categoryPrepend categoryAppend=categoryAppend categoryLinkClass=categoryLinkClass/>
+  <#if QueryString?contains("f." + facetDef.name?url)
+  || urlDecode(QueryString)?contains("f." + facetDef.name)
+  || urlDecode(QueryString)?contains("f." + facetDef.name?url)>
+    ${prefix?html}${categoryPrepend}<a href="${question.collection.configuration.value("ui.modern.search_link")}?${removeParam(facetScopeRemove(QueryString, facetDef.allQueryStringParamNames), ["start_rank"] + facetDef.allQueryStringParamNames)?html}" class="${categoryLinkClass?html}">${alltext}</a>${categoryAppend}
+  </#if>
+  <@FacetBreadCrumb categoryDefinitions=facetDef.categoryDefinitions selectedCategoryValues=question.selectedCategoryValues separator=separator  categoryPrepend=categoryPrepend categoryAppend=categoryAppend categoryLinkClass=categoryLinkClass/>
 </#macro>
 
 <#---
 Displays facet title or value of the current category.
-
 <p>Displays either the facet title if no categories has been
 selected, or the value of the currently selected category.</p>
-
 <p>For hierarchical facets, displays the latest selected category.</p>
-
 @param title Whether to display the facet title only, or the category.
 @param class CSS class to apply to the container DIV, <code>shortFacetLabel</code> by default.
 -->
@@ -487,7 +495,6 @@ selected, or the value of the currently selected category.</p>
 
 <#---
 Recursively generates the breadcrumbs for a facet.
-
 @param categoryDefinitions List of sub categories (hierarchical).
 @param selectedCategoryValues List of selected values.
 @param separator Separator to use in the breadcrumb.
@@ -502,76 +509,76 @@ Recursively generates the breadcrumbs for a facet.
     <#assign path = selectedCategoryValues[def.queryStringParamName][0]>
     <#assign pathBuilding = "">
     <#list path?split("/", "r") as part>
-	<#assign pathBuilding = pathBuilding + "/" + part>
-	<#-- Don't display bread crumb for parts that are part
-	     of the root URL -->
-	<#if ! def.data?lower_case?matches(".*[/\\\\]"+part?lower_case+"[/\\\\].*")>
-	    <#if part_has_next>
-		${separator} ${categoryPrepend}<a href="${question.collection.configuration.value("ui.modern.search_link")}?${removeParam(facetScopeRemove(QueryString, def.allQueryStringParamNames), ["start_rank"] + def.allQueryStringParamNames)?html}&amp;${def.queryStringParamName}=${pathBuilding?url}" class="${categoryLinkClass?html}">${part?html}</a>${categoryAppend}
-	    <#else>
-		<#if !checkbox>
-		${separator} ${categoryPrepend}${part?html}${categoryAppend}
-		</#if>
-	    </#if>
-	</#if>
+  <#assign pathBuilding = pathBuilding + "/" + part>
+  <#-- Don't display bread crumb for parts that are part
+       of the root URL -->
+  <#if ! def.data?lower_case?matches(".*[/\\\\]"+part?lower_case+"[/\\\\].*")>
+      <#if part_has_next>
+    ${separator} ${categoryPrepend}<a href="${question.collection.configuration.value("ui.modern.search_link")}?${removeParam(facetScopeRemove(QueryString, def.allQueryStringParamNames), ["start_rank"] + def.allQueryStringParamNames)?html}&amp;${def.queryStringParamName}=${pathBuilding?url}" class="${categoryLinkClass?html}">${part?html}</a>${categoryAppend}
+      <#else>
+    <#if !checkbox>
+    ${separator} ${categoryPrepend}${part?html}${categoryAppend}
+    </#if>
+      </#if>
+  </#if>
     </#list>
 <#else>
     <#if selectedCategoryValues?keys?seq_contains(def.queryStringParamName)>
-	<#-- Find the label for this category. For nearly all categories the label is equal
-	     to the value returned by the query processor, but not for date counts for example.
-	     With date counts the label is the actual year "2003" or a "past 3 weeks" but the
-	     value is the constraint to apply like "d=2003" or "d>12Jun2012" -->
-	<#-- Use value by default if we can't find a label -->
-	<#local valueLabel = selectedCategoryValues[def.queryStringParamName][0] />
+  <#-- Find the label for this category. For nearly all categories the label is equal
+       to the value returned by the query processor, but not for date counts for example.
+       With date counts the label is the actual year "2003" or a "past 3 weeks" but the
+       value is the constraint to apply like "d=2003" or "d>12Jun2012" -->
+  <#-- Use value by default if we can't find a label -->
+  <#local valueLabel = selectedCategoryValues[def.queryStringParamName][0] />
 
-	<#assign referenceFacet = response.facets/>
+  <#assign referenceFacet = response.facets/>
     <#if extraSearches?exists
             && extraSearches[ExtraSearches.FACETED_NAVIGATION]?exists
             && extraSearches[ExtraSearches.FACETED_NAVIGATION].response?exists
             && extraSearches[ExtraSearches.FACETED_NAVIGATION].response.facets?exists>
         <#assign referenceFacet = extraSearches[ExtraSearches.FACETED_NAVIGATION].response.facets/>
     </#if>
-	
-	<#-- Iterate over generated facets -->
-	<#list referenceFacet as facet>
-	    <#if def.facetName == facet.name>
-		<#-- Facet located, find current working category -->
-		<#assign fCat = facet.findDeepestCategory([def.queryStringParamName])!"" />
-		<#if fCat != "">
-		    <#list fCat.values as catValue>
-			<#-- Find the category value for which the query string param
-			     matches the currently selected value -->
-			<#local kv = catValue.queryStringParam?split("=") />
-			<#if valueLabel == urlDecode(kv[1])>
-			    <#local valueLabel = catValue.label />
-			</#if>
-		    </#list>
-		</#if>
-	    </#if>
-	</#list> 
+  
+  <#-- Iterate over generated facets -->
+  <#list referenceFacet as facet>
+      <#if def.facetName == facet.name>
+    <#-- Facet located, find current working category -->
+    <#assign fCat = facet.findDeepestCategory([def.queryStringParamName])!"" />
+    <#if fCat != "">
+        <#list fCat.values as catValue>
+      <#-- Find the category value for which the query string param
+           matches the currently selected value -->
+      <#local kv = catValue.queryStringParam?split("=") />
+      <#if valueLabel == urlDecode(kv[1])>
+          <#local valueLabel = catValue.label />
+      </#if>
+        </#list>
+    </#if>
+      </#if>
+  </#list> 
 
-	<#-- Find if we are processing the last selected value (leaf node) -->
-	<#local last = true>
-	<#list def.allQueryStringParamNames as param>
-	    <#if param != def.queryStringParamName && selectedCategoryValues?keys?seq_contains(param)>
-		<#local last = false>
-		<#break>
-	    </#if>
-	</#list>
+  <#-- Find if we are processing the last selected value (leaf node) -->
+  <#local last = true>
+  <#list def.allQueryStringParamNames as param>
+      <#if param != def.queryStringParamName && selectedCategoryValues?keys?seq_contains(param)>
+    <#local last = false>
+    <#break>
+      </#if>
+  </#list>
 
-	<#if last == true>
-	    <#if !checkbox>
-	    ${separator} ${categoryPrepend}${valueLabel?html}${categoryAppend}
-	    </#if>
-	<#else>
-	    ${separator} ${categoryPrepend}<a href="${question.collection.configuration.value("ui.modern.search_link")}?${removeParam(facetScopeRemove(QueryString, def.allQueryStringParamNames), ["start_rank"] + def.allQueryStringParamNames)?html}&amp;${def.queryStringParamName}=${selectedCategoryValues[def.queryStringParamName][0]?url}">
-		${valueLabel?html}
-	    </a>${categoryAppend}
-	    <@FacetBreadCrumb categoryDefinitions=def.subCategories selectedCategoryValues=selectedCategoryValues separator=separator categoryAppend=categoryAppend categoryPrepend=categoryPrepend/>
-	</#if>
-	<#-- We've displayed one step in the breadcrumb, no need to inspect
-	     other category definitions -->
-	<#break />
+  <#if last == true>
+      <#if !checkbox>
+      ${separator} ${categoryPrepend}${valueLabel?html}${categoryAppend}
+      </#if>
+  <#else>
+      ${separator} ${categoryPrepend}<a href="${question.collection.configuration.value("ui.modern.search_link")}?${removeParam(facetScopeRemove(QueryString, def.allQueryStringParamNames), ["start_rank"] + def.allQueryStringParamNames)?html}&amp;${def.queryStringParamName}=${selectedCategoryValues[def.queryStringParamName][0]?url}">
+    ${valueLabel?html}
+      </a>${categoryAppend}
+      <@FacetBreadCrumb categoryDefinitions=def.subCategories selectedCategoryValues=selectedCategoryValues separator=separator categoryAppend=categoryAppend categoryPrepend=categoryPrepend/>
+  </#if>
+  <#-- We've displayed one step in the breadcrumb, no need to inspect
+       other category definitions -->
+  <#break />
     </#if>
 </#if>
 </#list>
@@ -589,7 +596,7 @@ Returns a href link url for a facet category value.
 
   <#if .namespace.checkbox>
     <#if checked>
-	<#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"]) in .namespace/>
+  <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"]) in .namespace/>
     <#else>
       <#assign categoryLinkAddress = question.collection.configuration.value("ui.modern.search_link")+"?"+removeParam(QueryStringRemove,["start_rank"])+"&"+.namespace.categoryValue.queryStringParam in .namespace />
     </#if>
@@ -600,49 +607,49 @@ Returns a href link url for a facet category value.
 </#macro>
 
 <#---
-	Remove from query string parameter of given name and value
+  Remove from query string parameter of given name and value
 -->
 <#function removeParamVal queryString paramName paramVal>
-	<#-- works in Funnelback 14.2 -->
-	<#local queries = queryString?split("&",'r') />
-	<#list queries as query>
-		<#local params = query?split("=", "r") />
-		<#if urlDecode(params[0]) == urlDecode(paramName) && urlDecode(params[1]) == urlDecode(paramVal)>
-			<#if query_index == 0>
-				<#local queries = queries[query_index+1..] />
-			<#elseif !query_has_next>
-				<#local queries = queries[0..query_index-1] />
-			<#else>
-				<#local queries = queries[0..query_index-1] + queries[query_index+1..] />
-			</#if>
-		</#if>
-	</#list>
-	<#return queries?join('&') />
+  <#-- works in Funnelback 14.2 -->
+  <#local queries = queryString?split("&",'r') />
+  <#list queries as query>
+    <#local params = query?split("=", "r") />
+    <#if urlDecode(params[0]) == urlDecode(paramName) && urlDecode(params[1]) == urlDecode(paramVal)>
+      <#if query_index == 0>
+        <#local queries = queries[query_index+1..] />
+      <#elseif !query_has_next>
+        <#local queries = queries[0..query_index-1] />
+      <#else>
+        <#local queries = queries[0..query_index-1] + queries[query_index+1..] />
+      </#if>
+    </#if>
+  </#list>
+  <#return queries?join('&') />
 
-	<#-- works in v14.0 and earlier -->
-	<#--
-	<#local queries = queryString?split("&",'r') />
+  <#-- works in v14.0 and earlier -->
+  <#--
+  <#local queries = queryString?split("&",'r') />
     <#local queriesnew = []>
-	<#list queries as query>
-		<#local params = query?split("=", "r") />
-		<#if urlDecode(params[0]) == urlDecode(paramName) && urlDecode(params[1]) == urlDecode(paramVal)>
+  <#list queries as query>
+    <#local params = query?split("=", "r") />
+    <#if urlDecode(params[0]) == urlDecode(paramName) && urlDecode(params[1]) == urlDecode(paramVal)>
         <#else>
-			<#local queriesnew = queriesnew + [query] />
-		</#if>
-	</#list>
+      <#local queriesnew = queriesnew + [query] />
+    </#if>
+  </#list>
     <#local qs = '' />
     <#list queriesnew as query><#local qs = qs + query + '&' /></#list>
     <#return qs?replace('&$', '', 'r') />
-	-->
+  -->
 </#function>
 
 <#function facetScopeRemoveVal queryString paramName paramVal>
-	<#local m = queryString?matches("^(.*?)(facetScope=)(.*?)(&|$)") />
-	<#if m == true >
-		<#local facetScope = m[0]?groups[3] />
-		<#return queryString?replace(facetScope, removeParamVal(urlDecode(facetScope), paramName, paramVal)?url) />
-	</#if>
-	<#return queryString />
+  <#local m = queryString?matches("^(.*?)(facetScope=)(.*?)(&|$)") />
+  <#if m == true >
+    <#local facetScope = m[0]?groups[3] />
+    <#return queryString?replace(facetScope, removeParamVal(urlDecode(facetScope), paramName, paramVal)?url) />
+  </#if>
+  <#return queryString />
 </#function>
 
 <#-- Find the label for category in given facet. For nearly all categories the label is equal to the value returned by the query processor, 
@@ -650,7 +657,7 @@ but not for date counts for example. With date counts the label is the actual ye
 to apply like "d=2003" or "d>12Jun2012" -->
 <#-- Use value by default if we can't find a label -->
 <#function getAppliedFacetLabel facetName paramValue>
-	<#local referenceFacet = response.facets/>
+  <#local referenceFacet = response.facets/>
     <#if extraSearches?exists
             && extraSearches[ExtraSearches.FACETED_NAVIGATION]?exists
             && extraSearches[ExtraSearches.FACETED_NAVIGATION].response?exists
@@ -659,17 +666,17 @@ to apply like "d=2003" or "d>12Jun2012" -->
     </#if>
 
     <#-- Iterate over generated facets -->
-	<#list referenceFacet as facet>
-		<#if facetName == facet.name>
-			<#if facet.categories[0]??>
-				<#list facet.categories[0].values as val>
-					<#if urlDecode(val.queryStringParam?split("=", "r")[1]) == paramValue>
-						<#return val.label />
-					</#if>
-				</#list>
-			</#if>
-		</#if>
-	</#list>
+  <#list referenceFacet as facet>
+    <#if facetName == facet.name>
+      <#if facet.categories[0]??>
+        <#list facet.categories[0].values as val>
+          <#if urlDecode(val.queryStringParam?split("=", "r")[1]) == paramValue>
+            <#return val.label />
+          </#if>
+        </#list>
+      </#if>
+    </#if>
+  </#list>
 
-	<#return paramValue />
+  <#return paramValue />
 </#function>
