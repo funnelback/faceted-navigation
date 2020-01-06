@@ -1,0 +1,38 @@
+variables:
+    # github.com host key, required to push to GitHub
+    GITHUB_HOST_KEY: "github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ=="
+    # SSH config to use our deploy key to push to GitHub
+    GITHUB_SSH_CONFIG: |
+        Host github.com
+            User git
+            IdentityFile ~/.ssh/github_deploy_key
+stages:
+    - sync_github
+
+# Sync this repo with our GitHub public mirror
+sync_github:
+    stage: sync_github
+    image: alpine
+    variables:
+        # We don't want to keep any state from previous builds when we push
+        # to GitHub to avoid the local repo getting out of sync with GitHub
+        GIT_STRATEGY: clone
+    script:
+        - apk update
+        - apk add git openssh-client
+        # Only push to GitHub if the deploy key environment variable is set
+        # The variable is set in the GitLab CI config, and only on protected
+        # branches (master, release branches) so that we don't push every
+        # single feature / dev branch to GitHub
+        - test ! -z "${GITHUB_DEPLOY_KEY}" || exit 0
+        - git remote add github git@github.com:funnelback/faceted-navigation.git || true
+        - mkdir -p ~/.ssh
+        - echo "${GITHUB_DEPLOY_KEY}" > ~/.ssh/github_deploy_key
+        - echo "${GITHUB_HOST_KEY}" >> ~/.ssh/known_hosts
+        - chmod 0600 ~/.ssh/github_deploy_key
+        - echo "${GITHUB_SSH_CONFIG}" >> ~/.ssh/config
+        # Checkout required as we are in detached HEAD state
+        - git checkout ${CI_COMMIT_REF_NAME}
+        - git push github ${CI_COMMIT_REF_NAME}
+    tags:
+        - docker
